@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { workoutPlan } from "@/lib/workout-plan";
-import { CalendarDays, Dumbbell, Flame } from "lucide-react";
+import { BarChart3, CalendarDays, Dumbbell, Flame } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import {
   Sidebar,
@@ -16,48 +18,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { useSelectedDay } from "@/hooks/use-selected-day";
+import { ALL_DAYS, getTodayKey } from "@/lib/types";
 
-export type DayKey =
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday";
+// Re-export for consumers
+export { type DayKey, getTodayKey } from "@/lib/types";
 
-const ALL_DAYS: DayKey[] = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-];
-
-const DAY_MAP: readonly DayKey[] = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-];
-
-export function getTodayKey(): DayKey {
-  return DAY_MAP[new Date().getDay()];
-}
-
-interface AppSidebarProps {
-  selectedDay: DayKey;
-  onSelectDay: (day: DayKey) => void;
-}
-
-export function AppSidebar({ selectedDay, onSelectDay }: AppSidebarProps) {
+export function AppSidebar() {
   const todayKey = getTodayKey();
+  const pathname = usePathname();
+  const { selectedDay, setSelectedDay } = useSelectedDay();
 
   return (
     <Sidebar>
@@ -76,29 +48,59 @@ export function AppSidebar({ selectedDay, onSelectDay }: AppSidebarProps) {
         </div>
       </SidebarHeader>
 
-      {/* Sidebar Content — day navigation */}
+      {/* Sidebar Content */}
       <SidebarContent>
+        {/* Analytics link */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === "/analytics"}
+                  tooltip="Analytics"
+                >
+                  <Link href="/analytics">
+                    <BarChart3 />
+                    <span>Analytics</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* Day navigation */}
         <SidebarGroup>
           <SidebarGroupLabel>Schedule</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {ALL_DAYS.map((day) => {
                 const isToday = day === todayKey;
-                const isSelected = day === selectedDay;
+                const isSelected =
+                  pathname === "/schedule" && day === selectedDay;
 
                 return (
                   <SidebarMenuItem key={day}>
                     <SidebarMenuButton
+                      asChild
                       isActive={isSelected}
                       tooltip={day.charAt(0).toUpperCase() + day.slice(1)}
-                      onClick={() => onSelectDay(day)}
                     >
-                      {isToday ? (
-                        <Flame className="text-orange-500" />
-                      ) : (
-                        <CalendarDays />
-                      )}
-                      <span className="capitalize">{day}</span>
+                      <Link
+                        href="/schedule"
+                        onClick={() => setSelectedDay(day)}
+                      >
+                        {isToday ? (
+                          <Flame className="text-orange-500" />
+                        ) : (
+                          <CalendarDays />
+                        )}
+                        <span className="capitalize">{day}</span>
+                      </Link>
                     </SidebarMenuButton>
                     {isToday && (
                       <SidebarMenuBadge>
