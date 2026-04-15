@@ -4,34 +4,38 @@ import { useMemo } from "react";
 import { workoutPlan } from "@/lib/workout-plan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { Bar, BarChart, XAxis, YAxis, RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
-import type { DayKey } from "@/lib/types";
+import {
+  Bar,
+  BarChart,
+  XAxis,
+  YAxis,
+  RadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
+} from "recharts";
+import { ALL_DAYS, type DayKey } from "@/lib/types";
 import type { CompletionStore } from "@/hooks/use-completions";
+import type { SkipStore } from "@/hooks/use-skips";
 import {
   Flame,
   Target,
   TrendingUp,
   CheckCircle2,
+  SkipForward,
 } from "lucide-react";
-
-const ALL_DAYS: DayKey[] = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-];
 
 interface AnalyticsDashboardProps {
   store: CompletionStore;
+  skipStore: SkipStore;
   mounted: boolean;
 }
 
@@ -52,8 +56,19 @@ function getCompletedForDay(
   return Object.values(dayData).filter(Boolean).length;
 }
 
-// Calculate streak (consecutive days with at least 1 completion)
-function calculateStreak(store: CompletionStore): number {
+function isDaySkipped(
+  skipStore: SkipStore,
+  dateKey: string,
+  day: DayKey
+): boolean {
+  return !!skipStore[dateKey]?.[day];
+}
+
+// Calculate streak (consecutive days with at least 1 completion OR a skip)
+function calculateStreak(
+  store: CompletionStore,
+  skipStore: SkipStore
+): number {
   let streak = 0;
   const today = new Date();
 
@@ -62,15 +77,22 @@ function calculateStreak(store: CompletionStore): number {
     d.setDate(d.getDate() - i);
     const dateKey = d.toISOString().slice(0, 10);
     const dayEntries = store[dateKey];
+    const skipEntries = skipStore[dateKey];
 
-    if (!dayEntries) break;
+    if (!dayEntries && !skipEntries) break;
 
-    const totalCompleted = Object.values(dayEntries).reduce(
-      (sum, dayData) => sum + Object.values(dayData).filter(Boolean).length,
-      0
-    );
+    const totalCompleted = dayEntries
+      ? Object.values(dayEntries).reduce(
+          (sum, dayData) =>
+            sum + Object.values(dayData).filter(Boolean).length,
+          0
+        )
+      : 0;
 
-    if (totalCompleted > 0) {
+    // A skip still counts as "active" for streak purposes
+    const hasSkips = skipEntries && Object.keys(skipEntries).length > 0;
+
+    if (totalCompleted > 0 || hasSkips) {
       streak++;
     } else {
       break;
@@ -80,19 +102,33 @@ function calculateStreak(store: CompletionStore): number {
 }
 
 // Get the last 7 calendar days for the weekly chart
-function getLast7Days(): { dateKey: string; label: string; dayOfWeek: DayKey }[] {
-  const result: { dateKey: string; label: string; dayOfWeek: DayKey }[] = [];
+function getLast7Days(): {
+  dateKey: string;
+  label: string;
+  dateLabel: string;
+  dayOfWeek: DayKey;
+}[] {
+  const result: { dateKey: string; label: string; dateLabel: string; dayOfWeek: DayKey }[] = [];
   const today = new Date();
   const dayNames: DayKey[] = [
-    "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
   ];
 
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
     result.push({
       dateKey: d.toISOString().slice(0, 10),
       label: d.toLocaleDateString("en-US", { weekday: "short" }),
+      dateLabel: `${dd}/${mm}`,
       dayOfWeek: dayNames[d.getDay()],
     });
   }
@@ -104,8 +140,12 @@ const weeklyChartConfig: ChartConfig = {
     label: "Completed",
     color: "var(--chart-1)",
   },
-  total: {
-    label: "Total",
+  skipped: {
+    label: "Skipped",
+    color: "var(--chart-4)",
+  },
+  remaining: {
+    label: "Remaining",
     color: "var(--chart-2)",
   },
 };
@@ -117,23 +157,38 @@ const radialChartConfig: ChartConfig = {
   },
 };
 
-export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({
+  store,
+  skipStore,
+  mounted,
+}: AnalyticsDashboardProps) {
   const todayDateKey = getDateKey();
 
   const stats = useMemo(() => {
     if (!mounted) return null;
 
-    // Today's stats
     const todayDayNames: DayKey[] = [
-      "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
     ];
     const todayDay = todayDayNames[new Date().getDay()];
-    const todayTotal = getTotalExercises(todayDay);
-    const todayCompleted = getCompletedForDay(store, todayDateKey, todayDay);
-    const todayPercentage = todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
+    const todaySkipped = isDaySkipped(skipStore, todayDateKey, todayDay);
+    const todayTotal = todaySkipped ? 0 : getTotalExercises(todayDay);
+    const todayCompleted = todaySkipped
+      ? 0
+      : getCompletedForDay(store, todayDateKey, todayDay);
+    const todayPercentage =
+      todayTotal > 0
+        ? Math.round((todayCompleted / todayTotal) * 100)
+        : 0;
 
     // Streak
-    const streak = calculateStreak(store);
+    const streak = calculateStreak(store, skipStore);
 
     // Total all-time completions
     const allTimeCompleted = Object.values(store).reduce(
@@ -147,22 +202,46 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
       0
     );
 
+    // Count all-time skips
+    const allTimeSkipped = Object.values(skipStore).reduce(
+      (sum, dateData) => sum + Object.keys(dateData).length,
+      0
+    );
+
     // Weekly data
     const last7 = getLast7Days();
-    const weeklyData = last7.map(({ dateKey, label, dayOfWeek }) => {
+    const weeklyData = last7.map(({ dateKey, label, dateLabel, dayOfWeek }) => {
       const total = getTotalExercises(dayOfWeek);
+      const skipped = isDaySkipped(skipStore, dateKey, dayOfWeek);
+
+      if (skipped) {
+        return { day: label, dateLabel, completed: 0, skipped: total, remaining: 0, total };
+      }
+
       const completed = getCompletedForDay(store, dateKey, dayOfWeek);
-      return { day: label, completed, total };
+      const remaining = Math.max(0, total - completed);
+      return { day: label, dateLabel, completed, skipped: 0, remaining, total };
     });
 
     const weeklyCompleted = weeklyData.reduce((s, d) => s + d.completed, 0);
     const weeklyTotal = weeklyData.reduce((s, d) => s + d.total, 0);
+    const weeklySkippedCount = weeklyData.filter((d) => d.skipped > 0).length;
 
-    // Per-day completion for today (for detailed breakdown)
+    // Per-day breakdown
     const dayBreakdown = ALL_DAYS.map((day) => {
+      const skipped = isDaySkipped(skipStore, todayDateKey, day);
       const total = getTotalExercises(day);
-      const completed = getCompletedForDay(store, todayDateKey, day);
-      return { day, total, completed, percentage: total > 0 ? Math.round((completed / total) * 100) : 0 };
+      const completed = skipped
+        ? 0
+        : getCompletedForDay(store, todayDateKey, day);
+      return {
+        day,
+        total,
+        completed,
+        skipped,
+        percentage:
+          total > 0 ? Math.round((completed / total) * 100) : 0,
+      };
     });
 
     return {
@@ -170,14 +249,17 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
       todayTotal,
       todayCompleted,
       todayPercentage,
+      todaySkipped,
       streak,
       allTimeCompleted,
+      allTimeSkipped,
       weeklyData,
       weeklyCompleted,
       weeklyTotal,
+      weeklySkippedCount,
       dayBreakdown,
     };
-  }, [store, mounted, todayDateKey]);
+  }, [store, skipStore, mounted, todayDateKey]);
 
   if (!mounted || !stats) {
     return (
@@ -195,7 +277,13 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
     );
   }
 
-  const radialData = [{ name: "progress", value: stats.todayPercentage, fill: "var(--color-progress)" }];
+  const radialData = [
+    {
+      name: "progress",
+      value: stats.todaySkipped ? 0 : stats.todayPercentage,
+      fill: "var(--color-progress)",
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -209,9 +297,18 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Today</p>
-                <p className="text-2xl font-bold">
-                  {stats.todayCompleted}/{stats.todayTotal}
-                </p>
+                {stats.todaySkipped ? (
+                  <Badge
+                    variant="outline"
+                    className="text-orange-500 border-orange-500/50 mt-1"
+                  >
+                    Skipped
+                  </Badge>
+                ) : (
+                  <p className="text-2xl font-bold">
+                    {stats.todayCompleted}/{stats.todayTotal}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -244,6 +341,11 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
                 <p className="text-2xl font-bold">
                   {stats.weeklyCompleted}/{stats.weeklyTotal}
                 </p>
+                {stats.weeklySkippedCount > 0 && (
+                  <p className="text-[10px] text-orange-500">
+                    {stats.weeklySkippedCount} skipped
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -252,12 +354,13 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-3/10">
-                <CheckCircle2 className="h-5 w-5 text-chart-3" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-4/10">
+                <SkipForward className="h-5 w-5 text-chart-4" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">All Time</p>
-                <p className="text-2xl font-bold">{stats.allTimeCompleted}</p>
+                <p className="text-xs text-muted-foreground">Skipped</p>
+                <p className="text-2xl font-bold">{stats.allTimeSkipped}</p>
+                <p className="text-[10px] text-muted-foreground">all time</p>
               </div>
             </div>
           </CardContent>
@@ -272,19 +375,50 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
             <CardTitle className="text-base">Weekly Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={weeklyChartConfig} className="h-62.5 w-full">
+            <ChartContainer
+              config={weeklyChartConfig}
+              className="h-62.5 w-full"
+            >
               <BarChart data={stats.weeklyData} accessibilityLayer>
-                <XAxis dataKey="day" tickLine={false} axisLine={false} />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={({ x, y, payload, index }: { x: string | number; y: string | number; payload: { value: string }; index: number }) => {
+                    const item = stats.weeklyData[index];
+                    return (
+                      <g transform={`translate(${x},${y})`}>
+                        <text x={0} y={0} dy={12} textAnchor="middle" className="fill-muted-foreground text-xs">
+                          {payload.value}
+                        </text>
+                        <text x={0} y={0} dy={26} textAnchor="middle" className="fill-muted-foreground text-[10px] opacity-70">
+                          {item?.dateLabel}
+                        </text>
+                      </g>
+                    );
+                  }}
+                  height={45}
+                />
                 <YAxis tickLine={false} axisLine={false} width={30} />
                 <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
                 <Bar
                   dataKey="completed"
+                  stackId="a"
                   fill="var(--color-completed)"
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
-                  dataKey="total"
-                  fill="var(--color-total)"
+                  dataKey="skipped"
+                  stackId="a"
+                  fill="var(--color-skipped)"
+                  radius={[4, 4, 0, 0]}
+                  opacity={0.6}
+                />
+                <Bar
+                  dataKey="remaining"
+                  stackId="a"
+                  fill="var(--color-remaining)"
                   radius={[4, 4, 0, 0]}
                   opacity={0.3}
                 />
@@ -299,48 +433,67 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
             <CardTitle className="text-base">Today&apos;s Progress</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <ChartContainer config={radialChartConfig} className="h-45 w-45">
-              <RadialBarChart
-                data={radialData}
-                innerRadius={60}
-                outerRadius={85}
-                startAngle={90}
-                endAngle={90 - (360 * stats.todayPercentage) / 100}
-              >
-                <PolarAngleAxis
-                  type="number"
-                  domain={[0, 100]}
-                  angleAxisId={0}
-                  tick={false}
-                />
-                <RadialBar
-                  dataKey="value"
-                  cornerRadius={10}
-                  fill="var(--color-progress)"
-                  background={{ fill: "var(--muted)" }}
-                />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="fill-foreground text-2xl font-bold"
+            {stats.todaySkipped ? (
+              <div className="flex flex-col items-center justify-center h-45">
+                <SkipForward className="h-10 w-10 text-orange-500 mb-2" />
+                <p className="text-lg font-semibold text-orange-500">
+                  Skipped
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Today&apos;s workout was skipped
+                </p>
+              </div>
+            ) : (
+              <>
+                <ChartContainer
+                  config={radialChartConfig}
+                  className="h-45 w-45"
                 >
-                  {stats.todayPercentage}%
-                </text>
-              </RadialBarChart>
-            </ChartContainer>
-            <p className="text-sm text-muted-foreground mt-1">
-              {stats.todayCompleted} of {stats.todayTotal} exercises
-            </p>
+                  <RadialBarChart
+                    data={radialData}
+                    innerRadius={60}
+                    outerRadius={85}
+                    startAngle={90}
+                    endAngle={90 - (360 * stats.todayPercentage) / 100}
+                  >
+                    <PolarAngleAxis
+                      type="number"
+                      domain={[0, 100]}
+                      angleAxisId={0}
+                      tick={false}
+                    />
+                    <RadialBar
+                      dataKey="value"
+                      cornerRadius={10}
+                      fill="var(--color-progress)"
+                      background={{ fill: "var(--muted)" }}
+                    />
+                    <text
+                      x="50%"
+                      y="50%"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      className="fill-foreground text-2xl font-bold"
+                    >
+                      {stats.todayPercentage}%
+                    </text>
+                  </RadialBarChart>
+                </ChartContainer>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {stats.todayCompleted} of {stats.todayTotal} exercises
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Day-by-day breakdown for today */}
+      {/* Day-by-day breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Today&apos;s Breakdown by Day Plan</CardTitle>
+          <CardTitle className="text-base">
+            Today&apos;s Breakdown
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {stats.dayBreakdown
@@ -348,34 +501,55 @@ export function AnalyticsDashboard({ store, mounted }: AnalyticsDashboardProps) 
             .map((d) => (
               <div key={d.day} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="capitalize font-medium">{d.day} Exercises</span>
-                  <span className="text-muted-foreground">
-                    {d.completed}/{d.total}
+                  <span className="capitalize font-medium flex items-center gap-2">
+                    {d.day} Exercises
+                    {d.skipped && (
+                      <Badge
+                        variant="outline"
+                        className="text-orange-500 border-orange-500/50 text-[10px]"
+                      >
+                        Skipped
+                      </Badge>
+                    )}
                   </span>
+                  {!d.skipped && (
+                    <span className="text-muted-foreground">
+                      {d.completed}/{d.total}
+                    </span>
+                  )}
                 </div>
-                <Progress value={d.percentage} className="h-2" />
+                {!d.skipped && (
+                  <Progress value={d.percentage} className="h-2" />
+                )}
               </div>
             ))}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Warmup</span>
-              <span className="text-muted-foreground">
-                {getCompletedWarmup(store, todayDateKey, stats.todayDay)}/{workoutPlan.warmUp.length}
-              </span>
+          {!stats.todaySkipped && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Warmup</span>
+                <span className="text-muted-foreground">
+                  {getCompletedWarmup(store, todayDateKey, stats.todayDay)}/
+                  {workoutPlan.warmUp.length}
+                </span>
+              </div>
+              <Progress
+                value={
+                  workoutPlan.warmUp.length > 0
+                    ? Math.round(
+                        (getCompletedWarmup(
+                          store,
+                          todayDateKey,
+                          stats.todayDay
+                        ) /
+                          workoutPlan.warmUp.length) *
+                          100
+                      )
+                    : 0
+                }
+                className="h-2"
+              />
             </div>
-            <Progress
-              value={
-                workoutPlan.warmUp.length > 0
-                  ? Math.round(
-                      (getCompletedWarmup(store, todayDateKey, stats.todayDay) /
-                        workoutPlan.warmUp.length) *
-                        100
-                    )
-                  : 0
-              }
-              className="h-2"
-            />
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -388,7 +562,7 @@ function getCompletedWarmup(
   day: DayKey
 ): number {
   const dayData = store[dateKey]?.[day] ?? {};
-  return Object.entries(dayData)
-    .filter(([k, v]) => k.startsWith("warmup-") && v)
-    .length;
+  return Object.entries(dayData).filter(
+    ([k, v]) => k.startsWith("warmup-") && v
+  ).length;
 }

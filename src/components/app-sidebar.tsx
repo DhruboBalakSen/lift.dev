@@ -19,6 +19,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useSelectedDay } from "@/hooks/use-selected-day";
 import { ALL_DAYS, getTodayKey } from "@/lib/types";
@@ -30,6 +31,13 @@ export function AppSidebar() {
   const todayKey = getTodayKey();
   const pathname = usePathname();
   const { selectedDay, setSelectedDay } = useSelectedDay();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleMenuClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar>
@@ -61,7 +69,7 @@ export function AppSidebar() {
                   isActive={pathname === "/analytics"}
                   tooltip="Analytics"
                 >
-                  <Link href="/analytics">
+                  <Link href="/analytics" onClick={handleMenuClick}>
                     <BarChart3 />
                     <span>Analytics</span>
                   </Link>
@@ -92,7 +100,10 @@ export function AppSidebar() {
                     >
                       <Link
                         href="/schedule"
-                        onClick={() => setSelectedDay(day)}
+                        onClick={() => {
+                          setSelectedDay(day);
+                          handleMenuClick();
+                        }}
                       >
                         {isToday ? (
                           <Flame className="text-orange-500" />

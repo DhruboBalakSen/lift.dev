@@ -11,6 +11,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Footer } from "@/components/footer";
 import { CompletionProvider } from "@/hooks/use-completions";
 import { DayProvider, useSelectedDay } from "@/hooks/use-selected-day";
+import { SkipProvider } from "@/hooks/use-skips";
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,7 +53,9 @@ export default function DashboardLayout({
   return (
     <DayProvider>
       <CompletionProvider>
-        <DashboardShell>{children}</DashboardShell>
+        <SkipProvider>
+          <DashboardShell>{children}</DashboardShell>
+        </SkipProvider>
       </CompletionProvider>
     </DayProvider>
   );
