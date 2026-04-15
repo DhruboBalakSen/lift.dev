@@ -40,7 +40,7 @@ export function AppSidebar() {
             <Dumbbell className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-sm leading-tight">LiftDev</span>
+            <span className="font-semibold text-sm leading-tight">Lift</span>
             <span className="text-[11px] text-muted-foreground leading-tight">
               {workoutPlan.title}
             </span>

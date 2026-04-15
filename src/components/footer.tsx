@@ -6,7 +6,7 @@ export function Footer() {
       <div className="flex flex-col items-center gap-1 py-4 text-xs text-muted-foreground sm:flex-row sm:justify-between sm:px-6">
         <div className="flex items-center gap-1.5">
           <Dumbbell className="h-3.5 w-3.5" />
-          <span>LiftDev</span>
+          <span>Lift</span>
         </div>
         <p>Stay consistent. Trust the process. 💪</p>
       </div>
