@@ -2,203 +2,81 @@ export const workoutPlan = {
     "id": "planB",
     "title": "Plan B - Strength and Conditioning",
     "warmUp": [
-        {
-            "name": "10 Min Cross Trainer"
-        },
-        {
-            "name": "10 Min Cycling"
-        },
-        {
-            "name": "Push-ups / TRX Rows"
-        },
-        {
-            "name": "Squats"
-        }
+        { name: "10 Min Cross Trainer", sets: 1, reps: "10 min" },
+        { name: "10 Min Cycling", sets: 1, reps: "10 min" },
+        { name: "Push-ups / TRX Rows", sets: 2, reps: "10-15" },
+        { name: "Squats", sets: 2, reps: "15-20" }
     ],
     "days": {
         "monday": [
-            {
-                "name": "Bodyweight Vertical Rowing"
-            },
-            {
-                "name": "Machine Lat Pulldown (M/c Lat Pulldown)"
-            },
-            {
-                "name": "Machine Seated Rowing (M/c Seated Rowing)"
-            },
-            {
-                "name": "Machine Preacher Curls"
-            },
-            {
-                "name": "Bodyweight Alternating Lunges (Body Weight Alt Lunge)"
-            },
-            {
-                "name": "Standing Calf Raises"
-            }
+            { name: "Bodyweight Vertical Rowing", sets: 3, reps: "10-12" },
+            { name: "Machine Lat Pulldown", sets: 3, reps: "10-12" },
+            { name: "Machine Seated Rowing", sets: 3, reps: "10-12" },
+            { name: "Machine Preacher Curls", sets: 3, reps: "10-12" },
+            { name: "Bodyweight Alternating Lunges", sets: 3, reps: "12 each leg" },
+            { name: "Standing Calf Raises", sets: 4, reps: "15-20" }
         ],
         "tuesday": [
-            {
-                "name": "Machine Chest Press (M/c Chest Press)"
-            },
-            {
-                "name": "Machine Chest Pec Flyes (M/c Chest Pec Fly’s)"
-            },
-            {
-                "name": "Machine Shoulder Press (M/c Shoulder Press)"
-            },
-            {
-                "name": "Machine Rear Delt Flyes (M/c Rear Delt Fly’s)"
-            },
-            {
-                "name": "Machine / Dumbbell Lateral Raises (M/c DB Lateral Raises)"
-            },
-            {
-                "name": "Machine Tricep Pulldown (M/c Tricep Pulldown)"
-            },
-            {
-                "name": "Diamond Push-ups"
-            },
-            {
-                "name": "Push-ups"
-            }
+            { name: "Machine Chest Press", sets: 3, reps: "8-12" },
+            { name: "Machine Chest Pec Flyes", sets: 3, reps: "10-12" },
+            { name: "Machine Shoulder Press", sets: 3, reps: "8-12" },
+            { name: "Machine Rear Delt Flyes", sets: 3, reps: "12-15" },
+            { name: "Lateral Raises", sets: 3, reps: "12-15" },
+            { name: "Machine Tricep Pulldown", sets: 3, reps: "10-12" },
+            { name: "Diamond Push-ups", sets: 2, reps: "max" },
+            { name: "Push-ups", sets: 2, reps: "max" }
         ],
         "wednesday": [
-            {
-                "name": "Bodyweight Vertical Rowing"
-            },
-            {
-                "name": "Machine Lat Pulldown (M/c Lat Pulldown)"
-            },
-            {
-                "name": "Machine Seated Rowing (M/c Seated Rowing)"
-            },
-            {
-                "name": "Machine Preacher Curls"
-            },
-            {
-                "name": "Bodyweight Alternating Lunges (Body Weight Alt Lunge)"
-            },
-            {
-                "name": "Standing Calf Raises"
-            }
+            { name: "Bodyweight Vertical Rowing", sets: 3, reps: "10-12" },
+            { name: "Machine Lat Pulldown", sets: 3, reps: "10-12" },
+            { name: "Machine Seated Rowing", sets: 3, reps: "10-12" },
+            { name: "Machine Preacher Curls", sets: 3, reps: "10-12" },
+            { name: "Bodyweight Alternating Lunges", sets: 3, reps: "12 each leg" },
+            { name: "Standing Calf Raises", sets: 4, reps: "15-20" }
         ],
         "thursday": [
-            {
-                "name": "Squats",
-                "reps": 25
-            },
-            {
-                "name": "Machine Chest Press (M/c Chest Press)"
-            },
-            {
-                "name": "Machine Lat Pulldown (M/c Lat Pulldown)"
-            },
-            {
-                "name": "Machine Chest Pec Flyes (M/c Chest Pec Fly’s)"
-            },
-            {
-                "name": "Machine Seated Rowing (M/c Seated Rowing)"
-            },
-            {
-                "name": "Machine Shoulder Press (M/c Shoulder Press)"
-            },
-            {
-                "name": "Dumbbell Shoulder Press (DB Shoulder Press)"
-            },
-            {
-                "name": "Machine Preacher Curl (M/c Preacher Curl)"
-            },
-            {
-                "name": "Machine Tricep Pushdown (M/c Tricep Pulldown)"
-            },
-            {
-                "name": "Back Dips"
-            }
+            { name: "Squats", sets: 4, reps: "15-20" },
+            { name: "Machine Chest Press", sets: 3, reps: "8-12" },
+            { name: "Machine Lat Pulldown", sets: 3, reps: "10-12" },
+            { name: "Machine Chest Pec Flyes", sets: 3, reps: "10-12" },
+            { name: "Machine Seated Rowing", sets: 3, reps: "10-12" },
+            { name: "Machine Shoulder Press", sets: 3, reps: "8-12" },
+            { name: "Dumbbell Shoulder Press", sets: 3, reps: "8-12" },
+            { name: "Machine Preacher Curl", sets: 3, reps: "10-12" },
+            { name: "Machine Tricep Pushdown", sets: 3, reps: "10-12" },
+            { name: "Back Dips", sets: 2, reps: "max" }
         ],
         "friday": [
-            {
-                "name": "Machine Chest Press (M/c Chest Press)"
-            },
-            {
-                "name": "Machine Chest Pec Flyes (M/c Chest Pec Fly’s)"
-            },
-            {
-                "name": "Machine Shoulder Press (M/c Shoulder Press)"
-            },
-            {
-                "name": "Machine Rear Delt Flyes (M/c Rear Delt Fly’s)"
-            },
-            {
-                "name": "Machine / Dumbbell Lateral Raises (M/c DB Lateral Raises)"
-            },
-            {
-                "name": "Machine Tricep Pulldown (M/c Tricep Pulldown)"
-            },
-            {
-                "name": "Diamond Push-ups"
-            },
-            {
-                "name": "Push-ups"
-            }
+            { name: "Machine Chest Press", sets: 3, reps: "8-12" },
+            { name: "Machine Chest Pec Flyes", sets: 3, reps: "10-12" },
+            { name: "Machine Shoulder Press", sets: 3, reps: "8-12" },
+            { name: "Machine Rear Delt Flyes", sets: 3, reps: "12-15" },
+            { name: "Lateral Raises", sets: 3, reps: "12-15" },
+            { name: "Machine Tricep Pulldown", sets: 3, reps: "10-12" },
+            { name: "Diamond Push-ups", sets: 2, reps: "max" },
+            { name: "Push-ups", sets: 2, reps: "max" }
         ],
         "saturday": [
-            {
-                "name": "Squats",
-                "reps": 25
-            },
-            {
-                "name": "Machine Chest Press (M/c Chest Press)"
-            },
-            {
-                "name": "Machine Lat Pulldown (M/c Lat Pulldown)"
-            },
-            {
-                "name": "Machine Chest Pec Flyes (M/c Chest Pec Fly’s)"
-            },
-            {
-                "name": "Machine Seated Rowing (M/c Seated Rowing)"
-            },
-            {
-                "name": "Machine Shoulder Press (M/c Shoulder Press)"
-            },
-            {
-                "name": "Dumbbell Shoulder Press (DB Shoulder Press)"
-            },
-            {
-                "name": "Machine Preacher Curl (M/c Preacher Curl)"
-            },
-            {
-                "name": "Machine Tricep Pulldown (M/c Tricep Pulldown)"
-            },
-            {
-                "name": "Back Dips"
-            }
+            { name: "Squats", sets: 4, reps: "15-20" },
+            { name: "Machine Chest Press", sets: 3, reps: "8-12" },
+            { name: "Machine Lat Pulldown", sets: 3, reps: "10-12" },
+            { name: "Machine Chest Pec Flyes", sets: 3, reps: "10-12" },
+            { name: "Machine Seated Rowing", sets: 3, reps: "10-12" },
+            { name: "Machine Shoulder Press", sets: 3, reps: "8-12" },
+            { name: "Dumbbell Shoulder Press", sets: 3, reps: "8-12" },
+            { name: "Machine Preacher Curl", sets: 3, reps: "10-12" },
+            { name: "Machine Tricep Pushdown", sets: 3, reps: "10-12" },
+            { name: "Back Dips", sets: 2, reps: "max" }
         ],
         "sunday": [
-            {
-                "name": "Hamstrings"
-            },
-            {
-                "name": "Quads"
-            },
-            {
-                "name": "Cat-Camel Stretches"
-            },
-            {
-                "name": "Bodyweight Hyperextensions"
-            },
-            {
-                "name": "Lower Back Stretches"
-            },
-            {
-                "name": "Bird-Dog Stretches"
-            },
-            {
-                "name": "Crab Reach"
-            },
-            {
-                "name": "Bear Stretch"
-            }
+            { name: "Hamstrings", sets: 2, reps: "15-20" },
+            { name: "Quads", sets: 2, reps: "15-20" },
+            { name: "Cat-Camel Stretches", sets: 2, reps: "10-15" },
+            { name: "Bodyweight Hyperextensions", sets: 2, reps: "12-15" },
+            { name: "Lower Back Stretches", sets: 2, reps: "hold 20-30 sec" },
+            { name: "Bird-Dog Stretches", sets: 2, reps: "10 each side" },
+            { name: "Crab Reach", sets: 2, reps: "8-10" },
+            { name: "Bear Stretch", sets: 2, reps: "hold 20-30 sec" }
         ]
     }
 }
